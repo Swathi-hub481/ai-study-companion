@@ -1,0 +1,27 @@
+# Keep the build context small and keep secrets out of the image entirely.
+
+node_modules
+.next
+.next-build
+coverage
+storage
+
+.git
+.gitignore
+.github
+
+# Never copy environment files into an image; production values come from the platform.
+.env
+.env.*
+!.env.example
+
+# Development-only material.
+tests
+docs
+*.md
+docker-compose.yml
+Dockerfile
+.dockerignore
+eslint.config.mjs
+vitest.config.ts
+tsconfig.tsbuildinfo

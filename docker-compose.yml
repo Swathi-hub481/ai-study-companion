@@ -1,0 +1,81 @@
+services:
+  db:
+    # pgvector image ships Postgres 16 with the `vector` extension already available.
+    image: pgvector/pgvector:pg16
+    container_name: asc-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ai_study_companion
+    ports:
+      # Deliberately not 5432: a native PostgreSQL service on the host often owns
+      # that port, and on Windows two processes can bind the same port without an
+      # error, so host connections would be routed unpredictably. 5433 keeps this
+      # container unambiguous and leaves any existing local Postgres untouched.
+      - "5433:5432"
+    volumes:
+      - asc-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_study_companion"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # The application, containerised.
+  #
+  # `docker compose up -d db` alone is still the local development path — these two
+  # services are for running the whole thing from the image (see docs/deployment.md).
+  #
+  # The worker is a *separate service on purpose*: jobs must not be tied to a request's
+  # lifetime, so a learner can close the browser and still find their document
+  # processed. It shares the storage volume because both processes read and write the
+  # same uploaded files.
+  # ---------------------------------------------------------------------------
+
+  web:
+    build: .
+    container_name: asc-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: &app-environment
+        DATABASE_URL: postgresql://postgres:postgres@db:5432/ai_study_companion?schema=public
+        AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in the environment or a .env file}
+        APP_URL: ${APP_URL:-http://localhost:3000}
+        AI_PROVIDER: ${AI_PROVIDER:-mock}
+        AI_EMBED_PROVIDER: ${AI_EMBED_PROVIDER:-local}
+        GROQ_API_KEY: ${GROQ_API_KEY:-}
+        OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+        STORAGE_DRIVER: local
+        STORAGE_LOCAL_DIR: /data/storage
+        # Cached here rather than inside the image, so the embedding model survives a
+        # container rebuild instead of being re-downloaded on first use.
+        HF_HOME: /data/models
+        TRANSFORMERS_CACHE: /data/models
+        LOG_LEVEL: ${LOG_LEVEL:-info}
+    ports:
+      - "3000:3000"
+    volumes:
+      - asc-storage:/data
+
+  worker:
+    build: .
+    container_name: asc-worker
+    restart: unless-stopped
+    # Same image, different command: the only difference between the two processes.
+    command: npm run worker
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      <<: *app-environment
+    volumes:
+      - asc-storage:/data
+
+volumes:
+  asc-pgdata:
+  asc-storage:

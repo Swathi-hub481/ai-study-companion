@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+# Verification builds run with NEXT_DIST_DIR to avoid clobbering a live dev server.
+.next-verify/
+out/
+build/
+next-env.d.ts
+
+# Production
+dist/
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Database
+*.db
+*.db-journal
+
+# Uploaded documents (local storage driver)
+storage/
+!storage/.gitkeep
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+.vitest/
+
+# AI evaluation artifacts
+eval-results/*.local.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# TypeScript
+*.tsbuildinfo
