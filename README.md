@@ -1,7 +1,7 @@
 # AI Study Companion<img width="1536" height="1024" alt="Thumbnail_Image" src="https://github.com/user-attachments/assets/5ffcefa2-3f96-40af-93c2-d1f30a45a1e0" />
 
 <p align="center">
-  <img src="./thumbnail.png" alt="AI Study Companion" width="100%">
+  <img src="./Thumbnail_Image.png" alt="AI Study Companion" width="100%">
 </p>
 
 <p align="center">
